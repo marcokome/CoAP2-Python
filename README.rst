@@ -3,7 +3,7 @@ CoAP 2 -- The Python library
 
 This library is a python 3 implementation of a proposal for a better IoT protocol over IP. It is a client and server library with the idea to enhance the `CoAP`_ paradigma by adding to synchronous an asynchronous requests, 2 more features, both very essential to IoT: Dynamic/Smart discovery and Publish/Subscribe logic. With this protocol alone, no more need therefore for mDNS and MQTT, respectively for zero-configuration and notifications when building a connected device. The details of the protocol are depicted in article `CoAP Enhancement For a Better IoT Centric Protocol: CoAP 2.0`_.
 
-.. _`Constrained Application Protocol`: http://coap.technology/
+.. _`CoAP`: http://coap.technology/
 .. _'CoAP Enhancement For a Better IoT Centric Protocol: CoAP 2.0`: https://ieeexplore.ieee.org/abstract/document/8554494
 
 Goal
