@@ -20,6 +20,7 @@ Usage/Library integrations
 At this stage of the development, the library is able to:
 * Easily describe a server thanks to python decorators
 .. code-block:: python
+
 	from coap2 import Coap2
 
 	c = Coap2()
@@ -33,9 +34,26 @@ At this stage of the development, the library is able to:
 		print("Hello root's child !")
 
 	c.run() 
+	
+The output should looks like ...
+.. code-block:: text
+
+	CoAp2 server is running on marcokome.local:5683
+	Listening on 192.168.1.73...
+	Available resources (DEBUG):
+	{'/root': {'options': {'discoverable': True,
+				 'methods': ['GET'],
+				 'observable': True,
+				 'separate': False},
+		     'rule': <function test3 at 0x7fe48322bd08>},
+	 '/root/child': {'options': {'discoverable': True,
+			       'methods': ['GET'],
+			       'observable': True,
+			       'separate': False},
+		   'rule': <function test at 0x7fe485493620>},
 
 
-``methods`` refers to CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE``
+CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE`` are available.
 Other parameters of CoAP2.resource are:
 **``observable``: which means that a client can subscribe to the resource
 **``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
