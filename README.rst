@@ -1,3 +1,5 @@
+
+
 CoAP 2 -- The Python library
 ==================================
 
@@ -20,7 +22,8 @@ Usage/Library integrations
 
 At this stage of the development, the library is able to:
 
-* Easily describe a server thanks to python decorators
+1. Easily describe a server thanks to python decorators
+
 .. code-block:: python
 
 	from coap2 import Coap2
@@ -35,9 +38,10 @@ At this stage of the development, the library is able to:
 	def test2():
 		print("Hello root's child !")
 
-	c.run() 
-	
-The output should looks like ...
+	c.run()	
+
+The output should look like the following:
+
 .. code-block:: text
 
 	CoAp2 server is running on marcokome.local:5683
@@ -58,35 +62,59 @@ The output should looks like ...
 CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE`` are available.
 Other parameters of CoAP2.resource are:
 
--``observable``: which means that a client can subscribe to the resource
--``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
--``discoverable``: which means that the resource is visible for the discovery.
-* Lookout for node with the hostname
+..* ``observable``: which means that a client can subscribe to the resource
+..* ``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
+..* ``discoverable``: which means that the resource is visible for the discovery.
+
+2. Lookout for node with the hostname
 
 .. code-block:: python
 	from coap2 import Coap2
 
 	c = Coap2()
 	c.discover("marcokome.local")
+	
+The output should contain the following:
 
-* Lookout for node with the resources
+.. code-block:: text
+	**Default discovery callback:
+	---------------------------------
+	ip:('192.168.1.73', 5683),
+	hn:marcokome.local,
+	rs:{"/root": {"options": {"discoverable": true, "observable": true, "separate": false, "methods": ["GET"]}}, "/root/child": {"options": {"discoverable": true, "observable": true, "separate": false, "methods": ["POST"]}}, "/random": {"options": {"discoverable": true, "observable": true, "separate": false, "methods": ["GET"]}}}
+
+With the hostname filtering, only one response is expected. The above result is given via a default callback.
+
+3. Lookout for node with the resources
 
 .. code-block:: python
 	from coap2 import Coap2
 
 	c = Coap2()
 	c.discover(['/root', '/root/child'])
-	
-* A callback function can be used to collect the answer
+
+With this method, many responses are expected.
+
+
+4. A callback function can be used to collect the answer
 
 .. code-block:: python
 	from coap2 import Coap2
+	import json
 
 	c = Coap2()
 	def on_discovery(**res):
 		print("Hostname: {},\nAddress: {},\nResources: {}".format(res['hn'], res['ip'], [k for k in json.loads(res['rs']).keys()]))
 
 	c.discover("marcokome.local", , callback=on_discovery)
+	
+In a custom callback, the result is processed. The example of callback in the above code, should print the following text:
+
+.. code-block:: text
+	Hostname: marcokome.local,
+	Address: ('192.168.1.73', 5683),
+	Resources: ['/root', '/root/child', '/random']
+
 
 Features / Standards
 --------------------
