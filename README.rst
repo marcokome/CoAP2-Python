@@ -138,7 +138,7 @@ Dependencies
 
 The library works on ``python 3.5.2`` or newer. Before using the library, just make a quick ``pip install -r requirements.txt``, then you are ready to try on the samples of code available in the tests_ folder.
 
-.. _test: https://github.com/marcokome/CoAP-python/tests
+.. _tests: tests
 
 Development
 -----------
