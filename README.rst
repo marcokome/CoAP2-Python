@@ -59,14 +59,14 @@ The output should look like the following:
 		   'rule': <function test at 0x7fe485493620>},
 
 
-CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE`` are available.
-Other parameters of CoAP2.resource are:
+CoAP2.resource are:
 
-..* ``observable``: which means that a client can subscribe to the resource
-..* ``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
-..* ``discoverable``: which means that the resource is visible for the discovery.
+* ``methods``: which is a table with one or many of the following CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE``.
+* ``observable``: which means that a client can subscribe to the resource
+* ``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
+* ``discoverable``: which means that the resource is visible for the discovery.
 
-2. Lookout for node with the hostname
+2. Lookout for node with the hostname:
 
 .. code-block:: python
 	from coap2 import Coap2
