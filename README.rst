@@ -24,7 +24,7 @@ At this stage of the development, the library is able to:
 
 1. Easily describe a server thanks to python decorators
 
-.. code-block:: python
+   .. code-block:: python
 
 	from coap2 import Coap2
 
@@ -40,9 +40,9 @@ At this stage of the development, the library is able to:
 
 	c.run()	
 
-The output should look like the following:
+   The output should look like the following:
 
-.. code-block:: text
+   .. code-block:: text
 
 	CoAp2 server is running on marcokome.local:5683
 	Listening on 192.168.1.73...
@@ -59,31 +59,31 @@ The output should look like the following:
 		   'rule': <function test at 0x7fe485493620>},
 
 
-CoAP2.resource are:
+   CoAP2.resource are:
 
-* ``methods``: which is a table with one or many of the following CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE``.
-* ``observable``: which means that a client can subscribe to the resource
-* ``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
-* ``discoverable``: which means that the resource is visible for the discovery.
+   * ``methods``: which is a table with one or many of the following CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE``.
+   * ``observable``: which means that a client can subscribe to the resource
+   * ``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
+   * ``discoverable``: which means that the resource is visible for the discovery.
 
 2. Lookout for node with the hostname:
 
-.. code-block:: python
+   .. code-block:: python
 	from coap2 import Coap2
 
 	c = Coap2()
 	c.discover("marcokome.local")
 	
-The output should contain the following:
+   The output should contain the following:
 
-.. code-block:: text
+   .. code-block:: text
 	**Default discovery callback:
 	---------------------------------
 	ip:('192.168.1.73', 5683),
 	hn:marcokome.local,
 	rs:{"/root": {"options": {"discoverable": true, "observable": true, "separate": false, "methods": ["GET"]}}, "/root/child": {"options": {"discoverable": true, "observable": true, "separate": false, "methods": ["POST"]}}, "/random": {"options": {"discoverable": true, "observable": true, "separate": false, "methods": ["GET"]}}}
 
-With the hostname filtering, only one response is expected. The above result is given via a default callback.
+   With the hostname filtering, only one response is expected. The above result is given via a default callback.
 
 3. Lookout for node with the resources
 
