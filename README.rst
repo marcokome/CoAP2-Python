@@ -87,7 +87,7 @@ At this stage of the development, the library is able to:
 
 3. Lookout for node with the resources
 
-.. code-block:: python
+   .. code-block:: python
 	from coap2 import Coap2
 
 	c = Coap2()
@@ -98,7 +98,7 @@ With this method, many responses are expected.
 
 4. A callback function can be used to collect the answer
 
-.. code-block:: python
+   .. code-block:: python
 	from coap2 import Coap2
 	import json
 
@@ -108,9 +108,9 @@ With this method, many responses are expected.
 
 	c.discover("marcokome.local", , callback=on_discovery)
 	
-In a custom callback, the result is processed. The example of callback in the above code, should print the following text:
+   In a custom callback, the result is processed. The example of callback in the above code, should print the following text:
 
-.. code-block:: text
+   .. code-block:: text
 	Hostname: marcokome.local,
 	Address: ('192.168.1.73', 5683),
 	Resources: ['/root', '/root/child', '/random']
