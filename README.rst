@@ -10,6 +10,7 @@ Goal
 -----------
 
 The purpose of this library is threefold:
+
 * Performing a smart discovery over a network. A node can be retrieved with a hostname or thanks to the services it can provide. The services are also known as 'resources'. An all purpose multicast is also possible but it's not recommended as the purpose of this feature is to reduce latency and energy spent during the multicast.
 * Performing publish/subscribe requests. A CoAP2 client can subscribe to a node resource with rules ``<, >, and, or, ...`` so that only notifications of interest will be received. 
 * Performing synchronous ansynchrounous requests. This feature is already covered by COAP, the library is offering a more convenient way to perfom it. 
@@ -18,6 +19,7 @@ Usage/Library integrations
 --------------------------
 
 At this stage of the development, the library is able to:
+
 * Easily describe a server thanks to python decorators
 .. code-block:: python
 
@@ -55,10 +57,12 @@ The output should looks like ...
 
 CRUD methods ``GET``, ``PUT``, ``POST``, ``DELETE`` are available.
 Other parameters of CoAP2.resource are:
-**``observable``: which means that a client can subscribe to the resource
-**``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
-**``discoverable``: which means that the resource is visible for the discovery.
+
+-``observable``: which means that a client can subscribe to the resource
+-``separate``: which means that the resource will be long to answer back. This is an asynchronous communication.
+-``discoverable``: which means that the resource is visible for the discovery.
 * Lookout for node with the hostname
+
 .. code-block:: python
 	from coap2 import Coap2
 
@@ -66,6 +70,7 @@ Other parameters of CoAP2.resource are:
 	c.discover("marcokome.local")
 
 * Lookout for node with the resources
+
 .. code-block:: python
 	from coap2 import Coap2
 
@@ -73,6 +78,7 @@ Other parameters of CoAP2.resource are:
 	c.discover(['/root', '/root/child'])
 	
 * A callback function can be used to collect the answer
+
 .. code-block:: python
 	from coap2 import Coap2
 
@@ -110,6 +116,7 @@ Development
 -----------
 
 Currently under development: 
+
 * Publish/Subscribe
 * CRUD requests on synchronous and asynchronous mode.
 
