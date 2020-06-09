@@ -69,14 +69,16 @@ At this stage of the development, the library is able to:
 2. Lookout for node with the hostname:
 
    .. code-block:: python
+   
 	from coap2 import Coap2
 
 	c = Coap2()
 	c.discover("marcokome.local")
 	
    The output should contain the following:
-
+   
    .. code-block:: text
+   
 	**Default discovery callback:
 	---------------------------------
 	ip:('192.168.1.73', 5683),
@@ -88,17 +90,18 @@ At this stage of the development, the library is able to:
 3. Lookout for node with the resources
 
    .. code-block:: python
+   
 	from coap2 import Coap2
 
 	c = Coap2()
 	c.discover(['/root', '/root/child'])
 
-With this method, many responses are expected.
-
+   With this method, many responses are expected.
 
 4. A callback function can be used to collect the answer
 
    .. code-block:: python
+	
 	from coap2 import Coap2
 	import json
 
@@ -111,6 +114,7 @@ With this method, many responses are expected.
    In a custom callback, the result is processed. The example of callback in the above code, should print the following text:
 
    .. code-block:: text
+	
 	Hostname: marcokome.local,
 	Address: ('192.168.1.73', 5683),
 	Resources: ['/root', '/root/child', '/random']
