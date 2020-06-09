@@ -136,6 +136,7 @@ the list or in the excluded items, file a wishlist item at the same location).
 
 .. _RFC7252: https://tools.ietf.org/html/rfc7252
 .. _RFC7959: https://tools.ietf.org/html/rfc7959
+.. _`github issue tracker`: issues
 
 Dependencies
 ------------
