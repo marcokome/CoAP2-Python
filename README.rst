@@ -25,8 +25,7 @@ The library works on ``python 3.5.2`` or newer. Before using the library, make s
 .. code-block:: text
 	
 	git clone https://github.com/marcokome/CoAP2-Python.git. 
-	cd CoAP2-Python
-	pip3 install -r requirements.txt
+	cd CoAP2-Python/tests
 	
 You are now ready to try the samples available in the tests_ folder.
 
