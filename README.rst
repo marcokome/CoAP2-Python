@@ -17,6 +17,22 @@ The purpose of this library is threefold:
 * Performing publish/subscribe requests. A CoAP2 client can subscribe to a node resource with rules ``<, >, and, or, ...`` so that only notifications of interest will be received. 
 * Performing synchronous ansynchrounous requests. This feature is already covered by COAP, the library is offering a more convenient way to perfom it. 
 
+Dependencies
+------------
+
+The library works on ``python 3.5.2`` or newer. Before using the library, make sure you have ``git`` and ``pip3`` installed first. Then in the appropriate folder make
+
+.. code-block:: text
+	
+	git clone https://github.com/marcokome/CoAP2-Python.git. 
+	cd CoAP2-Python
+	pip3 install -r requirements.txt
+	
+You are now ready to try the samples available in the tests_ folder.
+
+.. _tests: tests
+
+
 Usage/Library integrations
 --------------------------
 
@@ -137,13 +153,6 @@ the list or in the excluded items, file a wishlist item at the same location).
 .. _RFC7252: https://tools.ietf.org/html/rfc7252
 .. _RFC7959: https://tools.ietf.org/html/rfc7959
 .. _`github issue tracker`: issues
-
-Dependencies
-------------
-
-The library works on ``python 3.5.2`` or newer. Before using the library, just make a quick ``pip install -r requirements.txt``, then you are ready to try on the samples of code available in the tests_ folder.
-
-.. _tests: tests
 
 Development
 -----------
