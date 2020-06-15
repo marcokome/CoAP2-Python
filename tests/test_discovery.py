@@ -8,10 +8,9 @@ c = Coap2()
 
 def on_discovery(**res):
 	print("Hostname: {},\nAddress: {},\nResources: {}".format(res['hn'], res['ip'], [k for k in json.loads(res['rs']).keys()]))
-	
+
 
 #c.discover()
-#c.discover("marcokome.local")
-#c.discover("device.local", callback=on_discovery)
+#c.discover("node1.local")
+#c.discover("node1.local", callback=on_discovery)
 c.discover(['/root'], callback=on_discovery)
-

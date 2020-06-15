@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, socket, struct, asyncio, time
+import os, socket, struct, asyncio, time, json
 import parameters, utils
 from Subscription import Subscription
 from Message import Message
@@ -12,7 +12,9 @@ from multiprocessing import Process, Pipe
 class Coap2():
 
     def __init__(self, domainame=None, port=None):
-        self.domainame = domainame[:9] +'.local' if domainame is not None else os.popen('hostname').read().split('\n')[0]+'.local'
+        #self.domainame = domainame[:9] +'.local' if domainame is not None else os.popen('hostname').read().split('\n')[0]+'.local'
+        self.domainame = ''.join([domainame[:9],'.local']) if domainame else ''.join([os.popen('hostname').read().split('\n')[0], '.local'])
+
         self.port = port if port is not None else parameters.DEFAULT_PORT
         ip = os.popen('hostname -I').read().split('\n')[0].split(' ')[0]
         self.ip = ip if ip is not '' else parameters.LOCALHOST
@@ -128,7 +130,7 @@ class Coap2():
                     for o in response.options:
                         if 'Uri-Host' in o :
                             if o['Uri-Host'] != self.domainame:
-                                print("Wrong Domain name, device {} shouldn't be responding to our request !!!")
+                                print("Wrong Domain name, device {} shouldn't be responding to our request !!!".format(o['Uri-Host']))
                                 break
                             else:
                                 #print("Response from {}".format(recv[1][0]))
@@ -263,6 +265,38 @@ class Coap2():
                         if not self.subscriptions.removeClient(notif_id):
                             code = parameters.RESPONSE_CODES['Not Found']
                             payload = 'The registration nbre doesnt exist'
+                # ----------------------------------------
+                # HANDLING Requests
+                # if message.options contains 'Uri-Path'
+                # then get the rule and subscribe the user...
+                # ----------------------------------------
+                elif next((True for x in message.options if 'Uri-Path' in x), False):
+                    uri = '/'+next((x['Uri-Path'] for x in message.options if 'Uri-Path' in x), None)
+                    print('Requesting {}'.format(uri))
+
+                    v = parameters.VERSION
+                    code = parameters.RESPONSE_CODES['Valid']
+                    t = parameters.TYPES['ACK']
+                    mid = message.mid
+                    options = dict()
+                    options['Content-Format'] = 'text/plain'
+                    token = b''
+                    payload = ''
+
+                    if next((True for x in self.functions if uri == x), False):
+                        c = next((x for x,y in parameters.METHODS.items() if y == message.code), None)
+                        if c in self.functions[uri]['options']['methods']:
+                            params = next((x['Uri-Query'] for x in message.options if 'Uri-Query' in x),None)
+                            #print('params: {}'.format(params))
+                            if params :
+                                payload = self.functions[uri]['rule'](json.loads(params))
+                            else:
+                                payload = self.functions[uri]['rule'](params)
+                        else:
+                            code = parameters.RESPONSE_CODES['Method Not Allowed']
+                    else:
+                        code = parameters.RESPONSE_CODES['Not Found']
+
 
                 response_message = Message(type=t, code=code, mid=mid, options=options, token=token, payload=payload)
                 response_message.send(socket=self.s, client=self.client)
@@ -434,61 +468,69 @@ class Coap2():
             #self.sender.send(0)
 
 
+    def _getIP(self, address):
+        ip = utils.getCachedIP(address)
+
+        if ip is not None:
+            return (ip, parameters.DEFAULT_PORT)
+        else:
+            response = self.discover(address, sync=True)
+            print(response)
+            if response is not None:
+                utils.cacheDNS(address, response[0])
+                return response
+            else:
+                return None
+
+    def _request(self, uri, type, data=None, header=None):
+        address, resource = utils.getAddressAndPath(uri)
+
+        self.client = self._getIP(address)
+        if self.client is None:
+            raise Exception("'{}' doesnt exist on the network or is not available !".format(address))
 
 
+        t = parameters.TYPES['CON']
+        mid = int.from_bytes(os.urandom(2), 'big')
+        token = b''
+        code = 0
 
+        if type == 1:
+            code = parameters.METHODS['GET']
+        elif type == 2:
+            code = parameters.METHODS['PUT']
+        elif type == 3:
+            code = parameters.METHODS['POST']
+        elif type == 4:
+            code = parameters.METHODS['DELETE']
 
+        options = dict()
+        options['Uri-Path'] = resource
 
-    #----------------------------------------
-    # TODO: CRUD Methods
-    #---------------------------------------
-    def get(self, uri, payload=None):
-        pass
+        if data:
+            options['Uri-Query'] = json.dumps(data)
 
-    def put(self, uri, payload=None):
-        pass
+        message = Message(type=t, code=code, mid=mid, options=options, token=token)
+        message.send(socket=self.s, client=self.client)
 
-    def post(self, uri, payload=None):
-        pass
+        try:
+            raw_data, self.client = self.s.recvfrom(parameters.BUFFERSIZE)
+            message = Message(raw_data=raw_data)
+            #print(message)
+            return (message.code, next((x['Content-Format'] for x in message.options if 'Content-Format' in x), None), message.payload.decode())
 
-    def delete(self, uri, payload=None):
-        pass
+        except socket.timeout:
+            print("Stop listening to incoming response...\n")
+            return (parameters.RESPONSE_CODES['Gateway Timeout'], None, None)
 
+    def get(self, uri, data=None, header=None):
+        return self._request(uri, 1, data=data, header=header)
 
+    def put(self, uri, data=None, header=None):
+        return self._request(uri, 2, data=data, header=header)
 
-if __name__=='__main__':
-    c = Coap2()
+    def post(self, uri, data=None, header=None):
+        return self._request(uri, 3, data=data, header=header)
 
-    @c.resource('/root', observable=True)
-    def test():
-        return "Hello root"
-
-    @c.resource('/root/child', methods=['POST'], observable=True, separate=False)
-    def test2():
-        print("Hello root's child !")
-
-    @c.resource('/root/child/private', observable=True, discoverable=False)
-    def test3():
-        print("Hello world")
-    '''
-    #test()
-    #test2()
-    #test3()
-    '''
-    c.run()
-    '''
-    def on_discovery(res):
-        print("hostname: {}, address: {}, resources: {}".format(res['hostname'], res['ip'], list(res['resources'].keys())))
-
-        elt = list(res['resources'].keys())[0]
-        func = list(res['resources'].values())[0]['rule']
-        print("Requesting resource '{}'...the associate function is: {} ".format(elt, list(res['resources'].values())[0]['rule']))
-        func()
-
-    #c.discover()
-    c.discover(callback=on_discovery)
-    #c.discover("device.local", callback=on_discovery)
-    #c.discover(['/temp', '/light'])
-
-    c.subscribe()
-    '''
+    def delete(self, uri, data=None, header=None):
+        return self._request(uri, 4, data=data, header=header)

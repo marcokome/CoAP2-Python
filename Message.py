@@ -1,6 +1,7 @@
 #CoAp2 message based on RFC... and the article...
 import parameters
 import json
+from itertools import chain
 
 class Message():
     def __init__(self, **argv):
@@ -97,6 +98,10 @@ class Message():
                 # Encode URI path accordind to rfc7252#...
                 if op_key == 'Uri-Path':
                     encoded += self._encodeURI(op_val)
+                    '''
+                elif op_key == 'Uri-Query':
+                    encoded += self._encodeQuery(op_val)
+                    '''
                 else:
                     delta, extended_delta = self._encode_extended_field(parameters.OPTIONS[op_key])
 
@@ -127,7 +132,7 @@ class Message():
         ops.remove('') if '' in ops else None
 
         for i,o in enumerate(ops):
-            print(o)
+            #print(o)
             if i == 0:
                 delta, extended_delta = self._encode_extended_field(parameters.OPTIONS['Uri-Path'])
             else:
@@ -158,6 +163,29 @@ class Message():
         #print(encoded)
         return encoded
 
+    def _encodeQuery(self, query):
+        encoded = []
+        delta, extended_delta = self._encode_extended_field(parameters.OPTIONS['Uri-Query'])
+
+        '''
+        for k,v in query.items():
+            q = '{}={}'.format(k,v)
+            length, extended_length = self._encode_extended_field(len(q))
+            encoded += [delta << 4 | length]
+            encoded += [e for e in extended_delta]
+            encoded += [e for e in extended_length]
+            #encoded += [ord(b) for b in o] if type(q) is not int else q.to_bytes(1, 'big')
+            encoded += [ord(b) for b in q]
+        '''
+        length, extended_length = self._encode_extended_field(len(query))
+        encoded += [delta << 4 | length]
+        encoded += [e for e in extended_delta]
+        encoded += [e for e in extended_length]
+        #encoded += [ord(b) for b in o] if type(q) is not int else q.to_bytes(1, 'big')
+        encoded += [ord(b) for b in query]
+
+        return encoded
+
     def _decodeOptionsAndPayload(self, rawbytes):
 
         options = []
@@ -180,6 +208,24 @@ class Message():
                         option['Content-Format'] = f
                         options.append(option)
                         break
+                        '''
+            elif 'Uri-Query' in option:
+
+                o = option['Uri-Query'].split('=')
+                q = dict({o[0]:o[1]})
+
+                if next((True for i in options if 'Uri-Query' in i), False):
+                    prev_uri_query = next((i for i in options if 'Uri-Query' in i), None)
+                    q = {k:v for k,v in chain(prev_uri_query['Uri-Query'].items(),q.items())}
+                    #print('previous q {}'.format(prev_uri_query))
+                    #print('new q {}'.format(q))
+                    options.remove(prev_uri_query)
+
+                options.append({'Uri-Query':q})
+                #print(options)
+
+                options.append(option)
+                '''
             else:
                 options.append(option)
 
@@ -239,10 +285,10 @@ class Message():
         #udp_body += msg_chksum
         udp_body += self.message
         if discovery:
-            print("Sending Message in discovery: {}".format(bytearray(udp_body)))
+            #print("Sending Message in discovery: {}".format(bytearray(udp_body)))
             socket.sendto(bytearray(udp_body), (parameters.MULTICAST_V4, parameters.DEFAULT_PORT))
         else:
-            print("Sending Message: {}".format(bytearray(udp_body)))
+            #print("Sending Message: {}".format(bytearray(udp_body)))
             socket.sendto(bytearray(udp_body), client)
 
     #TODO
