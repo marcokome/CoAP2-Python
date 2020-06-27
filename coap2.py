@@ -111,8 +111,6 @@ class Coap2():
             #Start discovery server
             (receiver, sender) = Pipe(False) # Open unidirectionnal pipe
             self.listening_server = Process(target=self._listen, args=(c, sender))
-            #self.listening_server = Process(target=utils.listen, args=(self.s, self.client, c, sender))
-            #self.pooling_server = Process(target=self._pool, args=(message, receiver))
             self.pooling_server = Process(target=utils.pool, args=(self.s, message, receiver))
 
             self.listening_server.start()
@@ -127,6 +125,12 @@ class Coap2():
             else:
                 response = Message(raw_data=recv[0])
                 if response.mid == message.mid:
+                    op = next((o for o in response.options if 'Uri-Host' in o), None)
+                    if op['Uri-Host'] != self.domainame:
+                        print("{} doesn't correspond to a domain name !".format(op['Uri-Host']))
+                    else:
+                        return recv[1]
+                    '''
                     for o in response.options:
                         if 'Uri-Host' in o :
                             if o['Uri-Host'] != self.domainame:
@@ -135,6 +139,7 @@ class Coap2():
                             else:
                                 #print("Response from {}".format(recv[1][0]))
                                 return recv[1]
+                    '''
 
     def _listen(self, callback_function, send_pipe):
         while True:
@@ -204,14 +209,11 @@ class Coap2():
                             print('content-format: {}'.format(o['Content-Format']))
                     '''
 
-                    # blacklist the message
-                    self.message_blacklisted.append(mid)
+                    #print("Blacklist the message {}".format(mid))
+                    self.message_blacklisted.append(mid) # blacklist the message
 
                     response_message = Message(version=v, type=t, code=code, mid=mid, token=token, options=options, payload=self.discovery_response)
                     response_message.send(socket=self.s, client=self.client)
-
-                    #self.waiting_thread = Process(target=self._waiting_for_confirmation, args=(response_message, ))
-                    #self._waiting_for_confirmation()
 
                 else:
                     print("I'm not concerned !")
@@ -286,20 +288,34 @@ class Coap2():
                     if next((True for x in self.functions if uri == x), False):
                         c = next((x for x,y in parameters.METHODS.items() if y == message.code), None)
                         if c in self.functions[uri]['options']['methods']:
+                            #If it is an asynchronous communication, ACK first then send a CON message ?
+                            if self.functions[uri]['options']['separate']:
+                                print("Separate response")
+                                code = parameters.RESPONSE_CODES['Created']
+                                r = Message(type=t, code=code, mid=mid, options=dict(), token=token, payload='')
+                                r.send(socket=self.s, client=self.client)
+                                #time.sleep(3)
+                                code = parameters.RESPONSE_CODES['Valid']
+                                t = parameters.TYPES['CON']
+                                mid = int.from_bytes(os.urandom(2), 'big')
+                                '''
+                                '''
+                            #Get uri-query
                             params = next((x['Uri-Query'] for x in message.options if 'Uri-Query' in x),None)
-                            #print('params: {}'.format(params))
+
                             if params :
                                 payload = self.functions[uri]['rule'](json.loads(params))
                             else:
                                 payload = self.functions[uri]['rule'](params)
+
                         else:
                             code = parameters.RESPONSE_CODES['Method Not Allowed']
                     else:
                         code = parameters.RESPONSE_CODES['Not Found']
 
 
-                response_message = Message(type=t, code=code, mid=mid, options=options, token=token, payload=payload)
-                response_message.send(socket=self.s, client=self.client)
+                    response_message = Message(type=t, code=code, mid=mid, options=options, token=token, payload=payload)
+                    response_message.send(socket=self.s, client=self.client)
 
 
             elif message.type == parameters.TYPES['RST']:
@@ -316,23 +332,27 @@ class Coap2():
 
         # No filters
         print(options)
+        print(self.domainame)
+
         if not options:
+            print("No filters ...")
             return True
         else:
-            for o in options:
-                print(o)
-                if 'Discovery' in o:
-                    if ',' in o['Discovery']:
-                        resources = o['Discovery'].split(',')
-                        for r in resources:
-                            if r in self.functions.keys():
-                                return True
-                    elif o['Discovery'] == self.domainame:
-                        return True
+            op = next((o for o in options if 'Discovery' in o), None)
+            if op:
+                if ',' in op['Discovery']:
+                    resources = o['Discovery'].split(',')
+                    return next((True for r in resources if r in self.functions.keys()), False)
 
-        # In any other cases, don't answer
-        print("No filters ...")
-        return False
+                elif op['Discovery'] == self.domainame:
+                    print('Domain name matches !')
+                    return True
+                else:
+                    print('No domain name found !')
+                    return False
+            else:
+                print('No options!')
+                return False
 
     '''
     ----------------------------------------
@@ -482,7 +502,8 @@ class Coap2():
             else:
                 return None
 
-    def _request(self, uri, type, data=None, header=None):
+
+    def _request(self, uri, type, data=None, header=None, callback=None):
         address, resource = utils.getAddressAndPath(uri)
 
         self.client = self._getIP(address)
@@ -517,20 +538,34 @@ class Coap2():
             raw_data, self.client = self.s.recvfrom(parameters.BUFFERSIZE)
             message = Message(raw_data=raw_data)
             #print(message)
-            return (message.code, next((x['Content-Format'] for x in message.options if 'Content-Format' in x), None), message.payload.decode())
+            cf = None
+            if message.options:
+                cf = next((x['Content-Format'] for x in message.options if 'Content-Format' in x), None)
+
+            if message.code == parameters.RESPONSE_CODES['Created']:
+                # ----------------------------------------
+                # HANDLING Asyncronous Requests
+                # if message.code is 'Created'
+                # then start a receiver to send back an empty ACK message...
+                # -------------------------------------------
+                #print('Received a Created msg')
+
+                Process(target=utils.listen_to_asynchronous_req, args=(callback, self.s, message)).start()
+
+            return (message.code, cf, message.payload.decode())
 
         except socket.timeout:
             print("Stop listening to incoming response...\n")
             return (parameters.RESPONSE_CODES['Gateway Timeout'], None, None)
 
-    def get(self, uri, data=None, header=None):
-        return self._request(uri, 1, data=data, header=header)
+    def get(self, uri, data=None, header=None, callback=None):
+        return self._request(uri, 1, data=data, header=header, callback=callback)
 
-    def put(self, uri, data=None, header=None):
-        return self._request(uri, 2, data=data, header=header)
+    def put(self, uri, data=None, header=None, callback=None):
+        return self._request(uri, 2, data=data, header=header, callback=callback)
 
-    def post(self, uri, data=None, header=None):
-        return self._request(uri, 3, data=data, header=header)
+    def post(self, uri, data=None, header=None, callback=None):
+        return self._request(uri, 3, data=data, header=header, callback=callback)
 
-    def delete(self, uri, data=None, header=None):
-        return self._request(uri, 4, data=data, header=header)
+    def delete(self, uri, data=None, header=None, callback=None):
+        return self._request(uri, 4, data=data, header=header, callback=callback)

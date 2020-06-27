@@ -131,6 +131,46 @@ def sendACK(mid, socket, client):
     response_message = Message(type=t, code=code, mid=mid, options=options, token=token, payload=payload)
     response_message.send(socket=socket, client=client)
 
+
+def listen_to_asynchronous_req(callback, s, message):
+    print("Waiting for asynchronous response...")
+    c = callback if callback else default_asynchronous_callback
+
+    while True:
+        try:
+            raw_data, client = s.recvfrom(parameters.BUFFERSIZE)
+            response = Message(raw_data=raw_data)
+            #print(response)
+
+            c(code=response.code, type=response.type, payload=response.payload)
+
+            code = parameters.RESPONSE_CODES['Valid']
+            t = parameters.TYPES['ACK']
+            mid = message.mid
+            options = dict()
+            options['Content-Format'] = 'text/plain'
+            token = b''
+            payload = ''
+
+            response = Message(type=t, code=code, mid=mid, options=options, token=token, payload=payload)
+            response.send(socket=s, client=client)
+
+            break
+
+        except socket.timeout:
+            #print("Waiting for incoming response....")
+            pass
+
+
+# Default callback function for the async requests
+def default_asynchronous_callback(**res):
+    print("**Default asynchronous request callback:")
+    print("---------------------------------")
+
+    print("code: {},\ntype: {},\npayload: {}".format(res["code"], res["type"], res["payload"]))
+
+    print("---------------------------------")
+
 '''
 def listen(s, client, callback_function, send_pipe):
         devices_found = 0

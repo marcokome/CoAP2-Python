@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, time
 sys.path.append('../')
 
 from coap2 import Coap2
@@ -25,17 +25,24 @@ def test(kwargs):
 
 @c.resource('/root/child', methods=['POST'], separate=False)
 def test2(kwargs):
-	print('Data posted : {}'.format(', '.join(kwargs)))
 	response = "temperature is missing !"
+	if kwargs:
+		print('Data posted : {}'.format(', '.join(kwargs)))
 
-	if 'temp' in kwargs:
-		response = "It's getting cold !" if float(kwargs['temp']) < 10.0 else "The temperature is perfect"
-		print(response)
+		if 'temp' in kwargs:
+			response = "It's getting cold !" if float(kwargs['temp']) < 10.0 else "The temperature is perfect"
+			print(response)
 
 	return response
 
-@c.resource('/root/child/private', methods=['GET','POST'], discoverable=False)
-def test3():
+@c.resource('/root/child/private', methods=['GET','POST'], discoverable=False, separate=True)
+def test3(kwargs):
+	count=0
+	while count<=10:
+		count += 1
+		print(count)
+		time.sleep(1)
+
 	return "Hello child private"
 
 @c.resource('/random', observable=True)
